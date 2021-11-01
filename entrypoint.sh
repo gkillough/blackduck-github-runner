@@ -8,9 +8,12 @@ githubRunnerToken="${2}"
 githubRunnerVersion="${defaultGithubRunnerVersion}"
 githubRunnerGroup="${GITHUB_RUNNER_GROUP}"
 githubRunnerName="${GITHUB_RUNNER_NAME}"
-githubRunnerTags="${GITHUB_RUNNER_TAGS:-synopsys-detect}"
+githubRunnerTags="${GITHUB_RUNNER_TAGS:=synopsys-detect}"
 githubRunnerWorkDir="${GITHUB_RUNNER_WORK_DIR}"
-synopsysDetectVersion="${SYNOPSYS_DETECT_VERSION:-${defaultSynopsysDetectVersion}}"
+
+synopsysDetectVersion="${SYNOPSYS_DETECT_VERSION:=${defaultSynopsysDetectVersion}}"
+synopsysDetectDownloadUrl="${SYNOPSYS_DETECT_DOWNLOAD_URL:=https://sig-repo.synopsys.com/bds-integrations-release/com/synopsys/integration/synopsys-detect/${defaultSynopsysDetectVersion}/synopsys-detect-${defaultSynopsysDetectVersion}.jar}"
+synopsysDetectDownloadLocation=/synopsys-detect.jar
 
 # Validate Input
 if [ -z ${githubRunnerToken} ]; then
@@ -28,13 +31,6 @@ mkdir actions-runner && cd actions-runner
 echo "Downloading version ${githubRunnerVersion} of the GitHub Runner..."
 curl -o actions-runner-linux-x64-${githubRunnerVersion}.tar.gz -L https://github.com/actions/runner/releases/download/v${githubRunnerVersion}/actions-runner-linux-x64-${githubRunnerVersion}.tar.gz
 
-# Validate Download
-if [ ${githubRunnerVersion} = ${defaultGithubRunnerVersion} ]; then
-    echo "09aa49b96a8cbe75878dfcdc4f6d313e430d9f92b1f4625116b117a21caaba89  actions-runner-linux-x64-${githubRunnerVersion}.tar.gz" | shasum -a 256 -c
-else
-    echo "WARNING: Using non-default version of GitHub Runner (${githubRunnerVersion}), validation will be skipped"
-fi
-
 # Extract the installer
 echo "Extracting installer..."
 tar xzf ./actions-runner-linux-x64-${githubRunnerVersion}.tar.gz
@@ -51,7 +47,12 @@ echo "Configuring runner..."
  --work ${githubRunnerWorkDir}
 
 # Download Detect
- curl --silent -w "%{http_code}" -L -o /synopsys-detect.jar --create-dirs ${DETECT_SOURCE} \
-    && if [[ ! -f /synopsys-detect.jar ]]; then echo "Unable to download Detect ${synopsysDetectVersion} jar" && exit -1 ; fi
+if [ ! -f ${synopsysDetectDownloadLocation} ]; then
+    echo "Downloading Detect..."
+    curl --silent -w "%{http_code}\n" -L -o ${synopsysDetectDownloadLocation} --create-dirs ${synopsysDetectDownloadUrl} \
+        && if [[ ! -f ${synopsysDetectDownloadLocation} ]]; then echo "Unable to download Detect ${synopsysDetectVersion} jar" && exit -1 ; fi
+else
+    echo "Detect is already downloaded"
+fi
 
 ./run.sh
