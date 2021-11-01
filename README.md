@@ -1,0 +1,1 @@
+A docker image of a GitHub Runner, optimized for running [synopsys-detect](https://github.com/blackducksoftware/synopsys-detect).
