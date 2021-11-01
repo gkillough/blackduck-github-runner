@@ -1,7 +1,7 @@
-#!/bin/sh
+#!/bin/bash
 
 defaultGithubRunnerVersion="2.283.3"
-defaultSynopsysDetectVersion="7.0.0"
+defaultSynopsysDetectVersion="7.7.0"
 
 githubRepoUrl="${1}"
 githubRunnerToken="${2}"
@@ -49,5 +49,9 @@ echo "Configuring runner..."
  --name ${githubRunnerName} \
  --labels ${githubRunnerTags} \
  --work ${githubRunnerWorkDir}
+
+# Download Detect
+ curl --silent -w "%{http_code}" -L -o /synopsys-detect.jar --create-dirs ${DETECT_SOURCE} \
+    && if [[ ! -f /synopsys-detect.jar ]]; then echo "Unable to download Detect ${synopsysDetectVersion} jar" && exit -1 ; fi
 
 ./run.sh
