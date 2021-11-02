@@ -13,7 +13,7 @@ githubRunnerWorkDir="${GITHUB_RUNNER_WORK_DIR}"
 
 synopsysDetectVersion="${SYNOPSYS_DETECT_VERSION:=${defaultSynopsysDetectVersion}}"
 synopsysDetectDownloadUrl="${SYNOPSYS_DETECT_DOWNLOAD_URL:=https://sig-repo.synopsys.com/bds-integrations-release/com/synopsys/integration/synopsys-detect/${defaultSynopsysDetectVersion}/synopsys-detect-${defaultSynopsysDetectVersion}.jar}"
-synopsysDetectDownloadLocation=/synopsys-detect.jar
+synopsysDetectJarLocation=/synopsys-detect.jar
 
 # Validate Input
 if [ -z ${githubRunnerToken} ]; then
@@ -25,7 +25,7 @@ if [ -z ${githubRepoUrl} ]; then
     exit 1
 fi
 
-# Download Linux Runner
+# Download linux runner
 echo "Creating actions-runner directory..."
 mkdir actions-runner && cd actions-runner
 echo "Downloading version ${githubRunnerVersion} of the GitHub Runner..."
@@ -46,13 +46,15 @@ echo "Configuring runner..."
  --labels ${githubRunnerTags} \
  --work ${githubRunnerWorkDir}
 
-# Download Detect
-if [ ! -f ${synopsysDetectDownloadLocation} ]; then
+# Setup Detect
+if [ ! -f ${synopsysDetectJarLocation} ]; then
     echo "Downloading Detect..."
-    curl --silent -w "%{http_code}\n" -L -o ${synopsysDetectDownloadLocation} --create-dirs ${synopsysDetectDownloadUrl} \
-        && if [[ ! -f ${synopsysDetectDownloadLocation} ]]; then echo "Unable to download Detect ${synopsysDetectVersion} jar" && exit -1 ; fi
+    curl --silent -w "%{http_code}\n" -L -o ${synopsysDetectJarLocation} --create-dirs ${synopsysDetectDownloadUrl} \
+        && if [[ ! -f ${synopsysDetectJarLocation} ]]; then echo "Unable to download Detect ${synopsysDetectVersion} jar" && exit -1 ; fi
 else
     echo "Detect is already downloaded"
 fi
 
+# Start the runner
+echo "Starting GitHub Linux Runner version ${githubRunnerVersion}"
 ./run.sh
